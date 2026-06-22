@@ -1,4 +1,4 @@
-"""PlanGuide 应用服务。"""
+"""PlanManager 应用服务。"""
 
 from __future__ import annotations
 

@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="PlanGuide", version="1.0.0", lifespan=lifespan)
+    app = FastAPI(title="PlanManager", version="1.0.0", lifespan=lifespan)
     services = build_services(PlanRepository(SessionFactory))
     app.include_router(create_router(services))
     _mount_static(app)

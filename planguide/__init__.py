@@ -1,1 +1,1 @@
-"""PlanGuide 通用计划书架系统。"""
+"""PlanManager 通用计划书架系统。"""

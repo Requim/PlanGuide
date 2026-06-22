@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PlanGuide</title>
+  <title>PlanManager</title>
   <style>
     :root {
       --ink: #243036;
@@ -15,6 +15,9 @@
       --brick: #a9513f;
       --gold: #bf8722;
       --white: #fff;
+      --red: #b84837;
+      --green: #2f8f5b;
+      --blue: #376f9f;
       --shadow: 0 18px 45px rgba(35, 45, 48, .14);
     }
     * { box-sizing: border-box; }
@@ -49,7 +52,7 @@
     table { width: 100%; border-collapse: collapse; margin: 12px 0; background: var(--white); }
     th, td { border: 1px solid var(--line); padding: 8px; text-align: left; white-space: nowrap; }
     th { background: #edf3ef; }
-    .shell { max-width: 1220px; margin: 0 auto; padding: 22px; }
+    .shell { max-width: 1280px; margin: 0 auto; padding: 22px; }
     .topbar { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
     .brand { font-size: 24px; font-weight: 800; }
     .brand small { display: block; color: var(--muted); font-size: 13px; font-weight: 500; }
@@ -60,7 +63,7 @@
       box-shadow: var(--shadow);
       padding: 18px;
     }
-    .grid { display: grid; grid-template-columns: 320px 1fr; gap: 18px; align-items: start; }
+    .grid { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; }
     .stack { display: grid; gap: 12px; }
     .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .hidden { display: none !important; }
@@ -84,6 +87,37 @@
     .template-row { padding: 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--white); }
     .tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
     .tabs button.active { background: var(--brick); }
+    .detail-head { display: grid; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+    .detail-title { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+    .detail-title h2 { margin: 0; }
+    .detail-tabs, .overview-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .detail-tabs button, .overview-tabs button { color: var(--ink); background: var(--white); border: 1px solid var(--line); }
+    .detail-tabs button.active, .overview-tabs button.active { color: var(--white); background: var(--teal); border-color: var(--teal); }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: 10px; }
+    .stat { border: 1px solid var(--line); border-radius: 7px; padding: 12px; background: rgba(255,255,255,.78); }
+    .stat b { display: block; font-size: 22px; margin-bottom: 3px; }
+    .date-group { border: 1px solid var(--line); border-radius: 7px; background: rgba(255,255,255,.58); overflow: hidden; }
+    .date-toggle { width: 100%; color: var(--ink); background: rgba(255,255,255,.72); border-radius: 0; text-align: left; display: flex; justify-content: space-between; gap: 12px; }
+    .date-toggle strong { font-size: 16px; }
+    .date-toggle span { color: var(--muted); }
+    .group-body { display: grid; gap: 12px; padding: 12px; }
+    .today-note { border-left: 4px solid var(--gold); padding: 10px 12px; background: rgba(191,135,34,.11); border-radius: 6px; }
+    .overview-grid { display: grid; grid-template-columns: 250px 1fr; gap: 16px; align-items: start; }
+    .chart-panel { border: 1px solid var(--line); border-radius: 7px; padding: 14px; background: rgba(255,255,255,.74); }
+    .chart-panel h3 { margin: 0 0 12px; font-size: 17px; }
+    .donut { width: 170px; height: 170px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 12px; background: conic-gradient(var(--teal) var(--angle), #e7e1d5 0); }
+    .donut span { display: grid; place-items: center; width: 112px; height: 112px; border-radius: 50%; background: var(--panel); font-size: 28px; font-weight: 800; }
+    .bar-row { display: grid; grid-template-columns: 110px 1fr 58px; gap: 10px; align-items: center; margin: 9px 0; }
+    .bar { height: 10px; border-radius: 99px; background: #e6e1d5; overflow: hidden; }
+    .bar i { display: block; height: 100%; background: var(--teal); }
+    .status-list { display: grid; gap: 8px; }
+    .future-list, .phase-list { display: grid; gap: 9px; }
+    .future-item, .phase-row { display: grid; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,.66); }
+    .heatmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 8px; }
+    .heat-cell { min-height: 46px; border: 1px solid var(--line); border-radius: 6px; padding: 5px; background: #eee8dc; font-size: 11px; }
+    .heat-cell.done { background: rgba(47,143,91,.72); color: var(--white); border-color: transparent; }
+    .heat-cell.mid { background: rgba(191,135,34,.46); }
+    .heat-cell.todo { background: rgba(184,72,55,.24); }
     .toast {
       position: fixed;
       right: 18px;
@@ -99,6 +133,7 @@
       .shell { padding: 14px; }
       .grid { grid-template-columns: 1fr; }
       .task-grid { grid-template-columns: 1fr; }
+      .stats, .overview-grid { grid-template-columns: 1fr; }
       .topbar { align-items: flex-start; flex-direction: column; }
     }
   </style>
@@ -106,14 +141,14 @@
 <body>
   <main class="shell">
     <header class="topbar">
-      <div class="brand">PlanGuide <small>通用计划书架</small></div>
+      <div class="brand">PlanManager <small>通用计划书架</small></div>
       <div id="userBar" class="row hidden">
         <span id="userName" class="muted"></span>
         <button class="ghost" onclick="logout()">退出</button>
       </div>
     </header>
     <section id="authView" class="panel auth stack">
-      <h1>登录书架</h1>
+      <h1>登录 PlanManager</h1>
       <input id="username" placeholder="用户名">
       <input id="password" type="password" placeholder="密码">
       <input id="inviteCode" placeholder="邀请码，仅注册时填写">
@@ -137,7 +172,11 @@
   <div id="toast" class="toast hidden"></div>
   <script>
     const apiBase = '/plan/api';
-    const app = { user: null, books: [], templates: [], current: null, saveTimer: null, importPreview: null };
+    const app = {
+      user: null, books: [], templates: [], current: null, saveTimer: null,
+      importPreview: null, detailView: 'tasks', overviewTab: 'progress',
+      openDates: new Set(),
+    };
     boot();
 
     async function boot() {
@@ -199,19 +238,46 @@
       const res = await request(`/instances/${id}`);
       if (!res) return;
       app.current = res;
+      app.detailView = 'tasks';
+      app.overviewTab = 'progress';
+      initOpenDates();
       renderBook();
     }
     function renderBook() {
       const data = app.current;
       const progress = data.progress || {};
-      byId('mainContent').innerHTML = bookDetailHtml(data, progress);
+      byId('mainContent').innerHTML = bookDetailHtml(data, progress) + detailBody();
     }
     function bookDetailHtml(data, progress) {
       const pct = Math.round((progress.completion_rate || 0) * 100);
-      return `<div class="row"><button class="ghost" onclick="showShelf()">返回书架</button><h2>${escapeHtml(data.title)}</h2></div>
-        <div class="row muted"><span>完成 ${progress.done_items || 0}/${progress.total_items || 0}</span><span>今日 ${progress.today_done || 0}/${progress.today_total || 0}</span><span>revision ${data.revision}</span></div>
-        <div class="meter"><i style="width:${pct}%"></i></div>
-        <div class="stack">${data.template.items.map(taskCard).join('')}</div>`;
+      return `<div class="detail-head"><div class="detail-title"><div><button class="ghost" onclick="showShelf()">返回书架</button><h2>${escapeHtml(data.title)}</h2></div><div class="detail-tabs">${detailTab('tasks', '任务')}${detailTab('overview', '总览')}</div></div>
+        <div class="stats">${statCard('总完成率', `${pct}%`)}${statCard('已完成', `${progress.done_items || 0}/${progress.total_items || 0}`)}${statCard('今日任务', `${progress.today_done || 0}/${progress.today_total || 0}`)}${statCard('版本', data.revision)}</div>
+        <div class="meter"><i style="width:${pct}%"></i></div></div>`;
+    }
+    function detailBody() {
+      return app.detailView === 'overview' ? renderOverviewView() : renderTaskView();
+    }
+    function detailTab(key, label) {
+      const cls = app.detailView === key ? 'active' : '';
+      return `<button class="${cls}" onclick="switchDetail('${key}')">${label}</button>`;
+    }
+    function switchDetail(key) {
+      app.detailView = key;
+      renderBook();
+    }
+    function statCard(label, value) {
+      return `<div class="stat"><b>${escapeHtml(value)}</b><span class="muted">${escapeHtml(label)}</span></div>`;
+    }
+    function renderTaskView() {
+      const groups = groupItemsByDate(app.current.template.items);
+      const today = groups.find(group => group.date === todayKey());
+      const note = today ? '' : '<div class="today-note">今日无任务，其他日期任务已按日期收起。</div>';
+      return `${note}<div class="stack">${groups.map(dateGroup).join('')}</div>`;
+    }
+    function dateGroup(group) {
+      const open = app.openDates.has(group.date);
+      const body = open ? `<div class="group-body">${group.items.map(taskCard).join('')}</div>` : '';
+      return `<section class="date-group"><button class="date-toggle" onclick="toggleDate('${group.date}')"><strong>${escapeHtml(dateLabel(group.date))}</strong><span>${groupSummary(group)} ${open ? '收起' : '展开'}</span></button>${body}</section>`;
     }
     function taskCard(item) {
       const state = app.current.state.item_state[item.item_id] || {};
@@ -230,6 +296,7 @@
       const row = app.current.state.item_state[itemId] || {};
       row[key] = key === 'hours' ? Number(value || 0) : value;
       app.current.state.item_state[itemId] = row;
+      renderBook();
       scheduleSave();
     }
     function scheduleSave() {
@@ -245,6 +312,142 @@
       localStorage.removeItem(pendingKey(app.current.id));
       toast('已保存');
       await loadBaseData();
+      renderBook();
+    }
+    function initOpenDates() {
+      app.openDates = new Set();
+      if (app.current.template.items.some(item => item.date === todayKey())) app.openDates.add(todayKey());
+    }
+    function toggleDate(date) {
+      app.openDates.has(date) ? app.openDates.delete(date) : app.openDates.add(date);
+      renderBook();
+    }
+    function todayKey() {
+      const now = new Date();
+      const offset = now.getTimezoneOffset() * 60000;
+      return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+    }
+    function groupItemsByDate(items) {
+      const map = new Map();
+      items.forEach(item => pushGroup(map, item.date || 'unscheduled', item));
+      return Array.from(map, ([date, rows]) => ({ date, items: rows })).sort(compareGroup);
+    }
+    function pushGroup(map, key, item) {
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(item);
+    }
+    function compareGroup(a, b) {
+      if (a.date === 'unscheduled') return 1;
+      if (b.date === 'unscheduled') return -1;
+      return a.date.localeCompare(b.date);
+    }
+    function itemStatus(itemId) {
+      const row = app.current.state.item_state[itemId] || {};
+      return row.status || '未开始';
+    }
+    function dateLabel(date) {
+      if (date === 'unscheduled') return '未排期';
+      return date === todayKey() ? `${date} · 今天` : date;
+    }
+    function groupSummary(group) {
+      const done = group.items.filter(item => itemStatus(item.item_id) === '已完成').length;
+      return `${done}/${group.items.length}`;
+    }
+    function renderOverviewView() {
+      const tabs = `${overviewTab('progress', '实施进度')}${overviewTab('calendar', '日历热力')}${overviewTab('phase', '阶段复盘')}`;
+      return `<div class="overview-tabs">${tabs}</div>${overviewPanel()}`;
+    }
+    function overviewTab(key, label) {
+      const cls = app.overviewTab === key ? 'active' : '';
+      return `<button class="${cls}" onclick="switchOverview('${key}')">${label}</button>`;
+    }
+    function switchOverview(key) {
+      app.overviewTab = key;
+      renderBook();
+    }
+    function overviewPanel() {
+      const metrics = planMetrics(app.current);
+      if (app.overviewTab === 'calendar') return calendarOverview(metrics);
+      if (app.overviewTab === 'phase') return phaseOverview(metrics);
+      return progressOverview(metrics);
+    }
+    function planMetrics(plan) {
+      const items = plan.template.items || [];
+      const rows = items.map(item => metricRow(item));
+      return {
+        rows, total: rows.length, done: countRows(rows, '已完成'),
+        pending: countRows(rows, '需补做'), modules: bucketRows(rows, 'module'),
+        phases: bucketRows(rows, 'group'), dates: bucketRows(rows, 'date'),
+        overdue: overdueRows(rows), future: futureRows(rows),
+      };
+    }
+    function metricRow(item) {
+      return { ...item, status: itemStatus(item.item_id), date: item.date || 'unscheduled' };
+    }
+    function countRows(rows, status) {
+      return rows.filter(row => row.status === status).length;
+    }
+    function bucketRows(rows, key) {
+      const map = new Map();
+      rows.forEach(row => pushGroup(map, row[key] || '未分类', row));
+      return Array.from(map, ([name, items]) => ({ name, items }));
+    }
+    function overdueRows(rows) {
+      const today = todayKey();
+      return rows.filter(row => row.date !== 'unscheduled' && row.date < today && row.status !== '已完成');
+    }
+    function futureRows(rows) {
+      const today = todayKey();
+      return rows.filter(row => row.date >= today).slice(0, 7);
+    }
+    function progressOverview(metrics) {
+      const pct = percent(metrics.done, metrics.total);
+      return `<div class="overview-grid"><div class="chart-panel">${donutChart(pct)}${statusSummary(metrics)}</div><div class="stack">${moduleChart(metrics.modules)}${futureList(metrics.future)}${overdueCard(metrics.overdue)}</div></div>`;
+    }
+    function donutChart(pct) {
+      return `<h3>完成率</h3><div class="donut" style="--angle:${pct * 3.6}deg"><span>${pct}%</span></div>`;
+    }
+    function statusSummary(metrics) {
+      const doing = metrics.total - metrics.done - metrics.pending;
+      return `<div class="status-list">${statusLine('已完成', metrics.done)}${statusLine('需补做', metrics.pending)}${statusLine('未完成', doing)}</div>`;
+    }
+    function statusLine(label, value) {
+      return `<div class="row"><b>${escapeHtml(value)}</b><span>${escapeHtml(label)}</span></div>`;
+    }
+    function moduleChart(groups) {
+      return `<div class="chart-panel"><h3>按模块完成率</h3>${groups.map(groupBar).join('')}</div>`;
+    }
+    function groupBar(group) {
+      const pct = percent(countRows(group.items, '已完成'), group.items.length);
+      return `<div class="bar-row"><span>${escapeHtml(group.name)}</span><div class="bar"><i style="width:${pct}%"></i></div><b>${pct}%</b></div>`;
+    }
+    function futureList(rows) {
+      const items = rows.map(row => `<div class="future-item"><b>${escapeHtml(row.date)}</b><span>${escapeHtml(row.title)}</span><small class="muted">${escapeHtml(row.status)}</small></div>`).join('');
+      return `<div class="chart-panel"><h3>未来 7 个任务</h3><div class="future-list">${items || '<p class="muted">暂无后续任务</p>'}</div></div>`;
+    }
+    function overdueCard(rows) {
+      return `<div class="chart-panel"><h3>逾期未完成</h3><b>${rows.length}</b><p class="muted">按计划日期早于今天且未完成统计。</p></div>`;
+    }
+    function calendarOverview(metrics) {
+      const cells = metrics.dates.filter(g => g.name !== 'unscheduled').sort((a, b) => a.name.localeCompare(b.name));
+      return `<div class="chart-panel"><h3>日历热力</h3><div class="heatmap">${cells.map(heatCell).join('')}</div></div>`;
+    }
+    function heatCell(group) {
+      const pct = percent(countRows(group.items, '已完成'), group.items.length);
+      const cls = pct === 100 ? 'done' : pct > 0 ? 'mid' : 'todo';
+      return `<div class="heat-cell ${cls}"><b>${escapeHtml(group.name.slice(5))}</b><br>${pct}%</div>`;
+    }
+    function phaseOverview(metrics) {
+      return `<div class="chart-panel"><h3>阶段复盘</h3><div class="phase-list">${metrics.phases.map(phaseRow).join('')}</div></div>`;
+    }
+    function phaseRow(group) {
+      const done = countRows(group.items, '已完成');
+      const pending = countRows(group.items, '需补做');
+      const pct = percent(done, group.items.length);
+      return `<div class="phase-row"><div class="row"><b>${escapeHtml(group.name)}</b><span>${pct}%</span><span class="muted">需补做 ${pending}</span></div><div class="bar"><i style="width:${pct}%"></i></div></div>`;
+    }
+    function percent(done, total) {
+      return total ? Math.round(done / total * 100) : 0;
     }
     async function uploadExcel() {
       const input = byId('excelFile');
