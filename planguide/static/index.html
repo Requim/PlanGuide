@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PlanGuide</title>
+  <style>
+    :root {
+      --ink: #243036;
+      --muted: #66747a;
+      --paper: #f4efe3;
+      --panel: #fffaf0;
+      --line: #d8d1c3;
+      --teal: #16766f;
+      --brick: #a9513f;
+      --gold: #bf8722;
+      --white: #fff;
+      --shadow: 0 18px 45px rgba(35, 45, 48, .14);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      background:
+        linear-gradient(90deg, rgba(22,118,111,.08) 1px, transparent 1px) 0 0/32px 32px,
+        linear-gradient(rgba(169,81,63,.07) 1px, transparent 1px) 0 0/32px 32px,
+        var(--paper);
+    }
+    button, input, select, textarea { font: inherit; }
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 9px 13px;
+      color: var(--white);
+      background: var(--teal);
+      cursor: pointer;
+    }
+    button.secondary { background: var(--brick); }
+    button.ghost { color: var(--ink); background: transparent; border: 1px solid var(--line); }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 10px;
+      background: var(--white);
+    }
+    textarea { min-height: 76px; resize: vertical; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; background: var(--white); }
+    th, td { border: 1px solid var(--line); padding: 8px; text-align: left; white-space: nowrap; }
+    th { background: #edf3ef; }
+    .shell { max-width: 1220px; margin: 0 auto; padding: 22px; }
+    .topbar { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+    .brand { font-size: 24px; font-weight: 800; }
+    .brand small { display: block; color: var(--muted); font-size: 13px; font-weight: 500; }
+    .panel {
+      background: rgba(255,250,240,.95);
+      border: 1px solid rgba(22,118,111,.18);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    .grid { display: grid; grid-template-columns: 320px 1fr; gap: 18px; align-items: start; }
+    .stack { display: grid; gap: 12px; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .hidden { display: none !important; }
+    .muted { color: var(--muted); }
+    .auth { max-width: 430px; margin: 8vh auto; }
+    .books { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+    .book {
+      min-height: 170px;
+      padding: 16px;
+      border-radius: 7px;
+      background: linear-gradient(135deg, #fffdf6, #f1e5ce);
+      border-left: 9px solid var(--teal);
+      box-shadow: 0 10px 24px rgba(31, 41, 51, .11);
+      cursor: pointer;
+    }
+    .book h3, .task h3 { margin: 0 0 8px; font-size: 17px; }
+    .meter { height: 8px; background: #e4e7e4; border-radius: 99px; overflow: hidden; }
+    .meter i { display: block; height: 100%; background: var(--gold); }
+    .task { padding: 14px; border: 1px solid var(--line); border-radius: 7px; background: rgba(255,255,255,.72); }
+    .task-grid { display: grid; grid-template-columns: minmax(180px, 1.3fr) 140px 120px 1fr; gap: 10px; margin-top: 10px; }
+    .template-row { padding: 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--white); }
+    .tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .tabs button.active { background: var(--brick); }
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      max-width: 360px;
+      padding: 12px 14px;
+      border-radius: 7px;
+      color: var(--white);
+      background: var(--ink);
+      box-shadow: var(--shadow);
+    }
+    @media (max-width: 860px) {
+      .shell { padding: 14px; }
+      .grid { grid-template-columns: 1fr; }
+      .task-grid { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">PlanGuide <small>通用计划书架</small></div>
+      <div id="userBar" class="row hidden">
+        <span id="userName" class="muted"></span>
+        <button class="ghost" onclick="logout()">退出</button>
+      </div>
+    </header>
+    <section id="authView" class="panel auth stack">
+      <h1>登录书架</h1>
+      <input id="username" placeholder="用户名">
+      <input id="password" type="password" placeholder="密码">
+      <input id="inviteCode" placeholder="邀请码，仅注册时填写">
+      <div class="row">
+        <button onclick="login()">登录</button>
+        <button class="secondary" onclick="register()">注册</button>
+      </div>
+    </section>
+    <section id="appView" class="grid hidden">
+      <aside class="panel stack">
+        <div class="tabs">
+          <button id="tabBooks" class="active" onclick="showShelf()">书架</button>
+          <button id="tabNew" onclick="showNewBook()">新建</button>
+          <button id="tabImport" onclick="showImport()">导入</button>
+        </div>
+        <div id="sideContent"></div>
+      </aside>
+      <section id="mainContent" class="panel stack"></section>
+    </section>
+  </main>
+  <div id="toast" class="toast hidden"></div>
+  <script>
+    const apiBase = '/plan/api';
+    const app = { user: null, books: [], templates: [], current: null, saveTimer: null, importPreview: null };
+    boot();
+
+    async function boot() {
+      const me = await request('/auth/me', { silent: true });
+      if (me && me.user) {
+        app.user = me.user;
+        await enterApp();
+      }
+    }
+    async function register() {
+      const res = await request('/auth/register', { method: 'POST', body: authBody() });
+      if (res && res.user) toast('注册成功，可以登录');
+    }
+    async function login() {
+      const res = await request('/auth/login', { method: 'POST', body: authBody() });
+      if (!res || !res.user) return;
+      app.user = res.user;
+      await enterApp();
+    }
+    async function logout() {
+      await request('/auth/logout', { method: 'POST', body: {} });
+      location.reload();
+    }
+    async function enterApp() {
+      byId('authView').classList.add('hidden');
+      byId('appView').classList.remove('hidden');
+      byId('userBar').classList.remove('hidden');
+      byId('userName').textContent = app.user.username;
+      await loadBaseData();
+      showShelf();
+    }
+    async function loadBaseData() {
+      const [books, templates] = await Promise.all([request('/bookshelf'), request('/templates')]);
+      app.books = books ? books.books : [];
+      app.templates = templates ? templates.templates : [];
+    }
+    function showShelf() {
+      activeTab('tabBooks');
+      byId('sideContent').innerHTML = `<p class="muted">账号下保存所有计划，退出后再登录仍可恢复。</p>`;
+      byId('mainContent').innerHTML = `<h2>我的书架</h2><div class="books">${app.books.map(bookCard).join('')}</div>`;
+    }
+    function showNewBook() {
+      activeTab('tabNew');
+      byId('sideContent').innerHTML = '<p class="muted">从系统模板或私有模板创建新计划。</p>';
+      byId('mainContent').innerHTML = `<h2>新建计划</h2><div class="stack">${app.templates.map(templateCard).join('')}</div>`;
+    }
+    function showImport() {
+      activeTab('tabImport');
+      byId('sideContent').innerHTML = '<p class="muted">上传 .xlsx，选择列映射后保存为私有模板。</p>';
+      byId('mainContent').innerHTML = importView();
+    }
+    async function createBook(templateId) {
+      const res = await request('/instances', { method: 'POST', body: { template_id: templateId } });
+      if (!res || !res.id) return;
+      await loadBaseData();
+      openBook(res.id);
+    }
+    async function openBook(id) {
+      const res = await request(`/instances/${id}`);
+      if (!res) return;
+      app.current = res;
+      renderBook();
+    }
+    function renderBook() {
+      const data = app.current;
+      const progress = data.progress || {};
+      byId('mainContent').innerHTML = bookDetailHtml(data, progress);
+    }
+    function bookDetailHtml(data, progress) {
+      const pct = Math.round((progress.completion_rate || 0) * 100);
+      return `<div class="row"><button class="ghost" onclick="showShelf()">返回书架</button><h2>${escapeHtml(data.title)}</h2></div>
+        <div class="row muted"><span>完成 ${progress.done_items || 0}/${progress.total_items || 0}</span><span>今日 ${progress.today_done || 0}/${progress.today_total || 0}</span><span>revision ${data.revision}</span></div>
+        <div class="meter"><i style="width:${pct}%"></i></div>
+        <div class="stack">${data.template.items.map(taskCard).join('')}</div>`;
+    }
+    function taskCard(item) {
+      const state = app.current.state.item_state[item.item_id] || {};
+      return `<article class="task"><h3>${escapeHtml(item.title)}</h3><p class="muted">${escapeHtml([item.date, item.group, item.module].filter(Boolean).join(' · '))}</p><p>${escapeHtml(item.detail || '')}</p><div class="task-grid">${fieldControl(item.item_id, 'status', state.status || '未开始')}${fieldControl(item.item_id, 'hours', state.hours || 0)}${fieldControl(item.item_id, 'note', state.note || '')}<div class="muted">${escapeHtml(item.output || '')}</div></div></article>`;
+    }
+    function fieldControl(itemId, key, value) {
+      if (key === 'status') return statusSelect(itemId, key, value);
+      if (key === 'hours') return `<input type="number" min="0" step="0.5" value="${escapeAttr(value)}" onchange="updateItem('${itemId}','${key}',this.value)">`;
+      return `<textarea placeholder="备注" onchange="updateItem('${itemId}','${key}',this.value)">${escapeHtml(value)}</textarea>`;
+    }
+    function statusSelect(itemId, key, value) {
+      const opts = ['未开始', '进行中', '已完成', '需补做'];
+      return `<select onchange="updateItem('${itemId}','${key}',this.value)">${opts.map(o => option(o, value)).join('')}</select>`;
+    }
+    function updateItem(itemId, key, value) {
+      const row = app.current.state.item_state[itemId] || {};
+      row[key] = key === 'hours' ? Number(value || 0) : value;
+      app.current.state.item_state[itemId] = row;
+      scheduleSave();
+    }
+    function scheduleSave() {
+      clearTimeout(app.saveTimer);
+      app.saveTimer = setTimeout(saveCurrent, 500);
+    }
+    async function saveCurrent() {
+      const body = { revision: app.current.revision, state: app.current.state };
+      const res = await request(`/instances/${app.current.id}/state`, { method: 'PUT', body });
+      if (!res || !Number.isInteger(res.revision)) return storePending(body);
+      app.current.revision = res.revision;
+      app.current.state = res.state;
+      localStorage.removeItem(pendingKey(app.current.id));
+      toast('已保存');
+      await loadBaseData();
+    }
+    async function uploadExcel() {
+      const input = byId('excelFile');
+      if (!input.files.length) return toast('请选择 .xlsx 文件');
+      const form = new FormData();
+      form.append('file', input.files[0]);
+      const res = await fetch(`${apiBase}/imports/excel/preview`, { method: 'POST', body: form });
+      const data = await res.json();
+      if (!res.ok || data.error) return toast(data.error || '上传失败');
+      app.importPreview = data;
+      renderMapping();
+    }
+    function renderMapping() {
+      const preview = app.importPreview.preview;
+      const sheet = selectedSheet();
+      byId('mainContent').innerHTML = mappingHtml(preview, sheet);
+    }
+    function mappingHtml(preview, sheet) {
+      const select = name => `<select id="map_${name}"><option value="">不映射</option>${sheet.headers.map(h => option(h, '')).join('')}</select>`;
+      return `<h2>映射 Excel 列</h2><label>Sheet ${sheetSelect(preview.sheets, sheet.name)}</label><input id="importTitle" value="${escapeAttr(preview.filename.replace(/\\.xlsx$/i, ''))}"><div class="mapping"><label>任务标题 ${select('title')}</label><label>日期 ${select('date')}</label><label>分组/周次 ${select('group')}</label><label>模块 ${select('module')}</label><label>详情 ${select('detail')}</label><label>输出物 ${select('output')}</label></div>${sampleTable(sheet)}<button onclick="confirmImport('${sheet.name}')">保存为模板</button>`;
+    }
+    async function confirmImport(sheetName) {
+      const body = { job_id: app.importPreview.job_id, title: byId('importTitle').value, sheet_name: sheetName, mapping: readMapping() };
+      const res = await request('/imports/excel/confirm', { method: 'POST', body });
+      if (!res || !res.id) return;
+      await loadBaseData();
+      toast('模板已保存到账号');
+      showNewBook();
+    }
+    function readMapping() {
+      const keys = ['title', 'date', 'group', 'module', 'detail', 'output'];
+      return Object.fromEntries(keys.map(k => [k, byId(`map_${k}`).value]));
+    }
+    function selectedSheet() {
+      const sheets = app.importPreview.preview.sheets;
+      const current = byId('sheetName') ? byId('sheetName').value : sheets[0].name;
+      return sheets.find(sheet => sheet.name === current) || sheets[0];
+    }
+    function sheetSelect(sheets, current) {
+      return `<select id="sheetName" onchange="renderMapping()">${sheets.map(s => option(s.name, current)).join('')}</select>`;
+    }
+    function sampleTable(sheet) {
+      const rows = sheet.sample_rows || sheet.rows || [];
+      const head = sheet.headers.map(h => `<th>${escapeHtml(h)}</th>`).join('');
+      const body = rows.slice(0, 4).map(row => `<tr>${row.map(cell).join('')}</tr>`).join('');
+      return `<div style="overflow:auto"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+    }
+    function importView() {
+      return `<h2>导入 Excel 模型</h2><input id="excelFile" type="file" accept=".xlsx"><button onclick="uploadExcel()">上传并预览</button>`;
+    }
+    function bookCard(book) {
+      const pct = Math.round((book.progress.completion_rate || 0) * 100);
+      return `<div class="book" onclick="openBook(${book.id})"><h3>${escapeHtml(book.title)}</h3><p class="muted">${escapeHtml(book.template_title)} · ${escapeHtml(book.source_type)} · ${escapeHtml(book.status)}</p><div class="meter"><i style="width:${pct}%"></i></div><p>${pct}% · 今日 ${book.progress.today_done}/${book.progress.today_total}</p><p class="muted">${escapeHtml(book.updated_at)}</p></div>`;
+    }
+    function templateCard(tpl) {
+      return `<div class="template-row"><h3>${escapeHtml(tpl.title)}</h3><p class="muted">${escapeHtml(tpl.description || '')}</p><button onclick="createBook(${tpl.id})">创建计划书</button></div>`;
+    }
+    async function request(path, options = {}) {
+      const init = { method: options.method || 'GET', credentials: 'same-origin' };
+      if (options.body) {
+        init.headers = { 'Content-Type': 'application/json' };
+        init.body = JSON.stringify(options.body);
+      }
+      const res = await fetch(apiBase + path, init).catch(() => null);
+      if (!res) return fail('网络不可用', options);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) return fail(data.error || data.detail || '请求失败', options);
+      return data;
+    }
+    function fail(message, options) {
+      if (!options.silent) toast(message);
+      return null;
+    }
+    function authBody() {
+      return { username: byId('username').value.trim(), password: byId('password').value, invite_code: byId('inviteCode').value.trim() };
+    }
+    function activeTab(id) {
+      ['tabBooks', 'tabNew', 'tabImport'].forEach(tab => byId(tab).classList.toggle('active', tab === id));
+    }
+    function storePending(body) {
+      localStorage.setItem(pendingKey(app.current.id), JSON.stringify(body));
+      toast('保存失败，已保留本地待同步副本');
+    }
+    function pendingKey(id) { return `plan_pending_${id}`; }
+    function byId(id) { return document.getElementById(id); }
+    function cell(value) { return `<td>${escapeHtml(value)}</td>`; }
+    function option(value, selected) { return `<option ${value === selected ? 'selected' : ''}>${escapeHtml(value)}</option>`; }
+    function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+    function escapeAttr(value) { return escapeHtml(value).replace(/"/g, '&quot;'); }
+    function toast(message) {
+      const box = byId('toast');
+      box.textContent = message;
+      box.classList.remove('hidden');
+      setTimeout(() => box.classList.add('hidden'), 2600);
+    }
+  </script>
+</body>
+</html>
