@@ -39,3 +39,9 @@ docker compose up -d --build
 - `planguide-nginx`：新增的 PlanGuide 专用 nginx，监听宿主机 `127.0.0.1:8010`。
 
 如果公网入口是 Caddy，把 `deploy/caddy/planguide-handles.conf` 里的 `handle /plan*` 放在原有兜底转发前，并确保 `planguide-nginx` 和 Caddy 在同一个 Docker 网络。
+
+默认外部网络名是 `unlimitworld_default`。本地单独试 Docker 时，如果没有这个网络，可先执行：
+
+```bash
+docker network create unlimitworld_default
+```
